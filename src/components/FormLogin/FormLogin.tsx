@@ -16,12 +16,15 @@ const FormContainer = styled.div`
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   text-align: center;
+  margin-top: 20px;
 `;
 
 const Title = styled.h3`
   font-size: 35px;
   font-weight: bold;
   margin-bottom: 20px;
+  color: #5d37ef;
+  
 `;
 
 const Label = styled.label`
@@ -34,8 +37,8 @@ const Label = styled.label`
 const StyledButton = styled(Button)`
   width: 100%;
   padding: 10px;
-  background-color: #000;
-  color: #fff;
+  background: linear-gradient(to right, #fbb034, #ffdd00); 
+  color: #5d37ef;
   border: none;
   border-radius: 4px;
   font-size: 16px;
@@ -51,7 +54,7 @@ const StyledButton = styled(Button)`
 
 const StyledLink = styled(Link)`
   font-weight: 900;
-  color: #000;
+  color: #5d37ef;
   text-decoration: none;
 `;
 

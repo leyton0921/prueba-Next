@@ -5,6 +5,9 @@ import { FaRegHeart, FaShoppingCart } from "react-icons/fa";
 import styled from 'styled-components';
 import Spinner from "../spiner/Spiner";
 import Button from "../UI/Button/Button";
+import { useRouter } from "next/navigation";
+import { FaHeart } from "react-icons/fa";
+
 
 interface Product {
     id: number;
@@ -17,10 +20,12 @@ interface Product {
         rate: number;
         count: number;
     };
+    isLiked: boolean;
 }
 
 const GetProducts = () => {
     const [posts, setPosts] = useState<Product[]>([]);
+    const [likedProducts, setLikedProducts] = useState<number[]>([]); 
     const { data: session, status } = useSession();
 
     useEffect(() => {
@@ -53,48 +58,124 @@ const GetProducts = () => {
         fetchProducts();
     }, [session]);
 
+    const toggleLike = async (id: number) => {
+        if (!session) return;
+
+        const isLiked = likedProducts.includes(id);
+        const method = isLiked ? 'DELETE' : 'POST';
+        const url = `http://192.168.88.39:7000/auth/products/${id}/like`;
+
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Authorization': `Bearer ${session.user.access_token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log(data.message);
+
+                if (isLiked) {
+                    setLikedProducts(likedProducts.filter(productId => productId !== id));
+                } else {
+                    setLikedProducts([...likedProducts, id]);
+                }
+            } else {
+                throw new Error('Failed to toggle like.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
+    const handleCheckout = async () => {
+        if (!session) return;
+
+        const productsToCheckout = posts.map((post) => ({
+            id: post.id,
+            quantity: 1,
+            price: post.price,
+        }));
+
+        const body = JSON.stringify({
+            products: productsToCheckout,
+            totalItems: productsToCheckout.length,
+            priceTotal: productsToCheckout.reduce((acc, prod) => acc + prod.price, 0),
+        });
+
+        try {
+            const response = await fetch('http://192.168.88.39:7000/auth/products/checkout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${session.user.access_token}`,
+                    'Content-Type': 'application/json',
+                },
+                body,
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log(data.message);
+            } else {
+                throw new Error('Checkout failed.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
     if (status === "loading") {
-        return <Spinner/>; 
+        return <Spinner />;
     }
 
     if (status === "unauthenticated") {
-        return <div>You need to be authenticated to view products.</div>;
+       const router = useRouter()
+        router.push("/")
     }
 
     return (
         <ProducContainer>
-
-        <ProductGrid>
+            <ProductGrid>
             {posts.map((post) => (
-                <ProductCard key={post.id}>
-                    <ImageContainer>
-                        {post.image ? (
-                            <ProductImage src={post.image} alt={post.title} />
-                        ) : (
-                            <PlaceholderImage>
-                               hola
-                            </PlaceholderImage>
-                        )}
-                    </ImageContainer>
-                    <ProductTitle>{post.title}</ProductTitle>
-                    <ProductPrice>${post.price}</ProductPrice>
-                    <Accions>
-                    <AddToCartButton label={<FaShoppingCart />}/>
-                    <AddLike label={<FaRegHeart/>}/>
-                    </Accions>
-                   
-                </ProductCard>
-            ))}
-        </ProductGrid>
+    <ProductCard key={post.id}>
+        <ImageContainer>
+            {post.image ? (
+                <ProductImage src={post.image} alt={post.title} />
+            ) : (
+                <PlaceholderImage>hola</PlaceholderImage>
+            )}
+        </ImageContainer>
+        <ProductTitle>{post.title}</ProductTitle>
+        <ProductPrice>${post.price}</ProductPrice>
+        <Accions>
+            <AddToCartButton label={<FaShoppingCart />} onClick={handleCheckout} />
+            <AddLike
+                label={
+                    likedProducts.includes(post.id) 
+                        ? <FaHeart />  
+                        : <FaRegHeart />
+                }
+                onClick={() => toggleLike(post.id)} 
+            />
+        </Accions>
+    </ProductCard>
+))}
+            </ProductGrid>
         </ProducContainer>
     );
 };
+
 export const ProducContainer = styled.div`
     display: flex;
     padding-top: 20px;
     padding-left: 100px;
     width: 100%;
+    flex-direction: column;
 `;
+
 export const ProductGrid = styled.div`
     display: flex;
     flex-wrap: wrap;
@@ -114,7 +195,6 @@ export const ProductCard = styled.div`
 export const ImageContainer = styled.div`
     position: relative;
     padding-top: 100%; 
-
     border-radius: 8px;
     overflow: hidden;
     margin-bottom: 12px;
@@ -151,14 +231,15 @@ export const ProductTitle = styled.h2`
 export const ProductPrice = styled.p`
     font-size: 16px;
     color: #28a745;
- 
     width: 100%;
     margin-bottom: 12px;
 `;
+
 export const Accions = styled.div`
-width: 100%;
-display: flex;
-`
+    width: 100%;
+    display: flex;
+`;
+
 export const AddToCartButton = styled(Button)`
     background: linear-gradient(to right, #fbb034, #ffdd00); 
     color: #5d37ef;
@@ -175,7 +256,7 @@ export const AddToCartButton = styled(Button)`
 `;
 
 export const AddLike = styled(Button)`
-   background: linear-gradient(to right, #fbb034, #ffdd00); 
+    background: linear-gradient(to right, #fbb034, #ffdd00); 
     color: #5d37ef;
     padding: 12px 0;
     border: none;
@@ -187,7 +268,20 @@ export const AddLike = styled(Button)`
     &:hover {
         opacity: 0.9;
     }
+`;
 
-`
+export const CheckoutButton = styled(Button)`
+    background: #28a745;
+    color: white;
+    padding: 16px;
+    font-size: 18px;
+    border-radius: 8px;
+    margin-top: 20px;
+    cursor: pointer;
+    
+    &:hover {
+        opacity: 0.9;
+    }
+`;
 
 export default GetProducts;

@@ -8,6 +8,7 @@ import Input from "../UI/Input/Input";
 import Button from "../UI/Button/Button"; 
 import { useSession, signOut } from "next-auth/react";
 import { BsPersonCircle } from "react-icons/bs";
+import { CgLogOut } from "react-icons/cg";
 
 const NavBarContainer = styled.nav`
   display: flex;
@@ -26,7 +27,7 @@ const Logo = styled.a`
 `;
 
 const SearchContainer = styled(Input)`
- 
+ margin: 0 auto;
 `;
 
 const IconContainer = styled.div`
@@ -49,25 +50,15 @@ const IconButton = styled(Button)`
 `;
 
 const StyledLink = styled(Link)`
-  font-size: 16px;
-  text-decoration: none;
-  color: #000;
-  padding: 8px 16px;
-  border-radius: 4px;
-  transition: color 0.3s ease;
+   background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: white;
+  transition: transform 0.2s ease;
 
   &:hover {
-    background: #e6e4e48e;
-  }
-
-  &.register {
-    background-color: #000;
-    color: #fff;
-  }
-
-  &.singOut{
-    background-color: #000;
-    color: #fff;
+    transform: scale(1.1);
   }
 `;
 
@@ -82,9 +73,12 @@ const NavBar = () => {
             <>
                   <SearchContainer type="text" placeholder="Search products..."/>
       <IconContainer>
-      <IconButton label={<BsPersonCircle />}/>
+      <StyledLink href="/profile"><BsPersonCircle /></StyledLink>
         <IconButton label={<FaRegHeart />}/>
         <IconButton label={<IoCartOutline />}/>
+        <IconButton label={<CgLogOut />} onClick={() => signOut()}/>
+
+
       </IconContainer>
 
             </>
