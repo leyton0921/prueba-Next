@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import NavBar from "@/components/NavBar/Nav";
-
+import Footer from "@/components/Footer/Footer";
 
 
 const geistSans = localFont({
@@ -32,8 +32,8 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
     <SessionProviderWrapper>
     <NavBar/>
-
       {children}
+      <Footer/>
       </SessionProviderWrapper>  
       </body>
     
