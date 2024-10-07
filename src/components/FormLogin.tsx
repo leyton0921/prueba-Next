@@ -73,7 +73,7 @@ const LoginForm = () => {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/");
+      router.push("/products");
     }
   }, [status, router]); 
 

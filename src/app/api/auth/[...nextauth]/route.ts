@@ -1,36 +1,30 @@
-import NextAuth from "next-auth";
+import NextAuth, { User as NextAuthUser} from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextApiRequest, NextApiResponse } from "next";
 
-
-
-declare module "next-auth" {
-    interface User {
+interface IUser {
+    access_token: string;
+    user: {
         id: string;
         name: string;
         email: string;
         username: string;
         phone: string;
-    }
+    };
+}
 
+declare module "next-auth" {
+    interface User extends IUser {}
     interface Session {
-        user: User;
+        user: IUser;
     }
 }
 
-
-interface IUser {
-    id: string;
-    name: string;
-    email: string;
-    username: string;
-    phone: string;
-}
-
+const API_URL =  "http://192.168.88.39:7000";
 
 const authenticateUser = async (username: string, password: string): Promise<IUser | null> => {
     try {
-        const response = await fetch("http://192.168.88.39:7000/auth/login", {
+        const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -41,8 +35,10 @@ const authenticateUser = async (username: string, password: string): Promise<IUs
         const data = await response.json();
 
         if (response.ok) {
-            const { user } = data;
-            return { id: user.id, name: user.name, email: user.email, username: user.username, phone: user.phone };
+            return {
+                ...data.user,
+                access_token: data.access_token,
+            };
         } else {
             throw new Error(data.message || "Invalid username or password");
         }
@@ -54,7 +50,7 @@ const authenticateUser = async (username: string, password: string): Promise<IUs
 
 const registerUser = async (name: string, email: string, password: string, username: string, phone: string): Promise<IUser | null> => {
     try {
-        const response = await fetch("http://192.168.88.39:7000/auth/signup", {
+        const response = await fetch(`${API_URL}/auth/signup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -65,8 +61,10 @@ const registerUser = async (name: string, email: string, password: string, usern
         const data = await response.json();
 
         if (response.ok) {
-            const { user } = data;
-            return { id: user.id, name: user.name, email: user.email, username: user.username, phone: user.phone };
+            return {
+                ...data.user,
+                access_token: data.access_token,
+            };
         } else {
             throw new Error(data.message || "Error registering user");
         }
@@ -84,14 +82,11 @@ const handler = NextAuth({
                 username: { label: "Username", type: "text" },
                 password: { label: "Password", type: "password" },
             },
-            async authorize(credentials: { username: string; password: string } | undefined) {
-                console.log('Attempting to authenticate:', credentials);
+            async authorize(credentials) {
                 const user = await authenticateUser(credentials!.username, credentials!.password);
                 if (user) {
-                    console.log('User authenticated successfully:', user);
-                    return user;
+                    return user as NextAuthUser; 
                 } else {
-                    console.error('Authentication failed for:', credentials!.username);
                     throw new Error("Invalid username or password");
                 }
             },
@@ -104,25 +99,15 @@ const handler = NextAuth({
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
-                token.id = user.id;
-                token.name = user.name;
-                token.email = user.email;
-                token.username = user.username;
+                token = { ...token, ...user };
             }
             return token;
         },
         async session({ session, token }) {
-            session.user = session.user || {};
-            if (token) {
-                session.user.id = token.id as string;
-                session.user.name = token.name as string;
-                session.user.email = token.email as string;
-                session.user.username = token.username as string;
-            }
+            session.user.access_token = token.access_token as string
             return session;
         },
     },
-
     secret: "abcd.123",
     debug: true,
     session: {
