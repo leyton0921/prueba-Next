@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styled from "styled-components";
-import Input from "./UI/Input/Input";
-import Button from "./UI/Button/Button";
-// import Spinner from "../Spiner/Spiner";
+import Input from "../UI/Input/Input";
+import Button from "../UI/Button/Button";
+import Spinner from "../spiner/Spiner";
 
 const FormContainer = styled.div`
   width: 100%;
@@ -93,7 +93,7 @@ const LoginForm = () => {
 
   return (
     <div>
-      {status === "loading" && "loading..."}
+      {status === "loading" && <Spinner/>}
 
       {status === "unauthenticated" && (
         <FormContainer>

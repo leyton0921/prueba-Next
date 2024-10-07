@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
+import NavBar from "@/components/NavBar/Nav";
 
 
 
@@ -29,7 +30,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-    <SessionProviderWrapper>{children}</SessionProviderWrapper>  
+    <SessionProviderWrapper>
+    <NavBar/>
+
+      {children}
+      </SessionProviderWrapper>  
       </body>
     
     </html>
