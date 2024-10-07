@@ -107,7 +107,7 @@ const GetProducts = () => {
         });
 
         try {
-            const response = await fetch('http://192.168.88.39:7000/auth/products/checkout', {
+            const response = await fetch('http://192.168.88.39:7000/auth/checkout', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${session.user.access_token}`,
